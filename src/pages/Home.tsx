@@ -23,7 +23,7 @@ export default function Home() {
       <section className="hero">
         <div className="container" style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 820 ? '1.1fr 0.9fr' : '1fr', gap: 40, alignItems: 'center', paddingTop: 56, paddingBottom: 56 }}>
           <div className="fade-up">
-            <span className="pill pill-green"><Truck size={14} /> Livraison sous 24h · Province de l'Estuaire</span>
+            <span className="pill pill-green"><Truck size={14} /> Livraison sous 24h · Owendo, Akanda, Libreville</span>
             <h1 className="h1 mt-16" style={{ fontFamily: 'var(--font-arial)' }}>
               Vos devis et commandes de matériaux en <span style={{ color: 'var(--green)' }}>quelques secondes</span> et en quelques clics.
             </h1>

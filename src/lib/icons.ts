@@ -1,4 +1,4 @@
-import { TreePine, Layers, Square, Frame, Hammer, Package, Waves, Box, MoreHorizontal, TreeDeciduous } from 'lucide-react'
+import { TreePine, Layers, Square, Frame, Hammer, Package, Waves, Box, MoreHorizontal, TreeDeciduous, Tags } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 const map: Record<string, LucideIcon> = {
@@ -13,6 +13,7 @@ const map: Record<string, LucideIcon> = {
   'waves': Waves,
   'box': Box,
   'more-horizontal': MoreHorizontal,
+  'tags': Tags,
 }
 
 export function iconFor(name: string | null): LucideIcon {

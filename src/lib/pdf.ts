@@ -35,7 +35,7 @@ export function generateQuotePDF({ quoteNumber, civility, clientName, items, tot
 
   doc.setFontSize(10)
   doc.setTextColor(100, 116, 139)
-  doc.text('Matériaux de construction · Province de l\'Estuaire', M, y + 16)
+  doc.text('Matériaux de construction · Owendo, Akanda et Libreville', M, y + 16)
   y += 44
 
   // Greeting + intro

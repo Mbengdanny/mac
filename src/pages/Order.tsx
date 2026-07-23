@@ -127,7 +127,7 @@ export default function Order() {
           </div>
           <div className="field">
             <label className="label">Adresse de livraison</label>
-            <textarea className="textarea" value={address} onChange={e => setAddress(e.target.value)} placeholder="Quartier, repère, ville (province de l'Estuaire)" />
+            <textarea className="textarea" value={address} onChange={e => setAddress(e.target.value)} placeholder="Quartier, repère, ville (Owendo, Akanda ou Libreville)" />
           </div>
 
           <h3 className="h3 mt-24 mb-16">Mode de paiement</h3>
@@ -169,7 +169,7 @@ export default function Order() {
           <button className="btn btn-primary btn-block btn-lg mt-24" onClick={submit} disabled={busy}>
             {busy ? <Loader2 className="spinner" /> : <><Check size={18} /> Confirmer la commande</>}
           </button>
-          <p className="muted mt-16" style={{ fontSize: 12 }}>Livraison sous 24h — prix valables pour le chef-lieu de l'Estuaire.</p>
+          <p className="muted mt-16" style={{ fontSize: 12 }}>Livraison sous 24h — prix valables pour Owendo, Akanda et Libreville.</p>
         </div>
       </div>
     </div>

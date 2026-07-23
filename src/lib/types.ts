@@ -12,6 +12,7 @@ export type Product = {
   name: string
   unit: string
   price_fcfa: number
+  price_gros_fcfa: number
   description: string | null
   sort_order: number
 }

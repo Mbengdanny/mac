@@ -55,7 +55,7 @@ export default function Contact() {
             </div>
             <div className="card-soft flex gap-12" style={{ alignItems: 'center' }}>
               <span className="center" style={{ width: 44, height: 44, borderRadius: 12, background: '#fef9c3', color: 'var(--yellow-dark)' }}><MapPin size={20} /></span>
-              <div><div style={{ fontWeight: 700 }}>Zone</div><div className="muted" style={{ fontSize: 13.5 }}>Province de l'Estuaire</div></div>
+              <div><div style={{ fontWeight: 700 }}>Zone</div><div className="muted" style={{ fontSize: 13.5 }}>Owendo, Akanda et Libreville</div></div>
             </div>
           </div>
         </div>

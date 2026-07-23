@@ -64,7 +64,7 @@ export default function Cart() {
             <button className="btn btn-blue btn-block btn-lg" onClick={() => nav('/devis')}><FileText size={18} /> Faire un devis</button>
             <Link to="/catalogue" className="btn btn-ghost btn-block">Continuer mes achats</Link>
           </div>
-          <p className="muted mt-16" style={{ fontSize: 12 }}>Prix valables pour le chef-lieu de l'Estuaire.</p>
+          <p className="muted mt-16" style={{ fontSize: 12 }}>Prix valables pour Owendo, Akanda et Libreville.</p>
         </div>
       </div>
     </div>

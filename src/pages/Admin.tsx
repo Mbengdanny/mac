@@ -184,11 +184,15 @@ function ProductsPanel() {
   const [newCat, setNewCat] = useState('')
 
   const savePrice = async (id: string) => {
-    const val = parseInt(editing[id])
-    if (isNaN(val)) return
-    await supabase.from('products').update({ price_fcfa: val }).eq('id', id)
+    const detail = editing[id + '_detail']
+    const gros = editing[id + '_gros']
+    const updates: Record<string, number> = {}
+    if (detail && !isNaN(parseInt(detail))) updates.price_fcfa = parseInt(detail)
+    if (gros && !isNaN(parseInt(gros))) updates.price_gros_fcfa = parseInt(gros)
+    if (Object.keys(updates).length === 0) return
+    await supabase.from('products').update(updates).eq('id', id)
     toast.show('Prix mis à jour')
-    setEditing(e => { const n = { ...e }; delete n[id]; return n })
+    setEditing({})
     window.location.reload()
   }
 
@@ -231,11 +235,19 @@ function ProductsPanel() {
               <div style={{ fontWeight: 600, fontSize: 15 }}>{p.name}</div>
               <div className="muted" style={{ fontSize: 12.5 }}>{categories.find(c => c.id === p.category_id)?.name} · {p.unit}</div>
             </div>
-            <div className="flex gap-8" style={{ alignItems: 'center' }}>
-              <input className="input" style={{ width: 110, textAlign: 'right' }} type="number" defaultValue={p.price_fcfa}
-                onChange={e => setEditing(s => ({ ...s, [p.id]: e.target.value }))} />
+            <div className="flex gap-8" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="col" style={{ gap: 2 }}>
+                <span className="muted" style={{ fontSize: 11 }}>Détail</span>
+                <input className="input" style={{ width: 110, textAlign: 'right' }} type="number" defaultValue={p.price_fcfa}
+                  onChange={e => setEditing(s => ({ ...s, [p.id + '_detail']: e.target.value }))} />
+              </div>
+              <div className="col" style={{ gap: 2 }}>
+                <span className="muted" style={{ fontSize: 11 }}>Gros</span>
+                <input className="input" style={{ width: 110, textAlign: 'right' }} type="number" defaultValue={p.price_gros_fcfa}
+                  onChange={e => setEditing(s => ({ ...s, [p.id + '_gros']: e.target.value }))} />
+              </div>
               <span style={{ fontSize: 13, color: 'var(--muted)' }}>FCFA</span>
-              {editing[p.id] && <button className="btn btn-primary btn-sm" onClick={() => savePrice(p.id)}><Check size={15} /></button>}
+              {(editing[p.id + '_detail'] || editing[p.id + '_gros']) && <button className="btn btn-primary btn-sm" onClick={() => savePrice(p.id)}><Check size={15} /></button>}
               <button className="qty-btn" style={{ color: '#ef4444', borderColor: '#fecaca' }} onClick={() => del(p.id)}><Trash2 size={15} /></button>
             </div>
           </div>

@@ -39,7 +39,7 @@ export default function Catalog() {
   return (
     <div className="container section">
       <h1 className="h2">Catalogue des produits</h1>
-      <p className="muted mt-8">Toutes les rubriques disponibles dans la province de l'Estuaire. Les prix peuvent varier d'une province à une autre.</p>
+      <p className="muted mt-8">Toutes les rubriques disponibles. Les devis et commandes ne sont valables que pour Owendo, Akanda et Libreville. Les prix peuvent varier d'une province à une autre.</p>
 
       <div className="field mt-24" style={{ position: 'relative' }}>
         <Search size={18} style={{ position: 'absolute', left: 14, top: 13, color: 'var(--muted)' }} />
@@ -65,6 +65,11 @@ export default function Catalog() {
               <div>
                 <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--green)' }}>{fcfa(p.price_fcfa)}</div>
                 <div className="muted" style={{ fontSize: 12 }}>par {p.unit}</div>
+                {p.price_gros_fcfa > 0 && (
+                  <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--yellow-dark)', marginTop: 4 }}>
+                    Gros : {fcfa(p.price_gros_fcfa)}
+                  </div>
+                )}
               </div>
               <button className="btn btn-primary btn-sm" onClick={() => addOne(p.id)}>
                 {added[p.id] ? <><Check size={16} /> Ajouté</> : <><Plus size={16} /> Ajouter</>}

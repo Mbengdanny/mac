@@ -25,7 +25,7 @@ export default function Estuaire() {
               Votre espace <span style={{ color: 'var(--green)' }}>Estuaire</span>
             </h1>
             <p className="lead mt-16" style={{ fontFamily: 'var(--font-arial)' }}>
-              Devis et commandes de matériaux de construction, livraison rapide dans toute la province de l'Estuaire.
+              Devis et commandes de matériaux de construction, livraison rapide à Owendo, Akanda et Libreville.
             </p>
             <div className="flex gap-12 mt-24" style={{ flexWrap: 'wrap' }}>
               <Link to="/devis" className="btn btn-primary btn-lg"><FileText size={18} /> Faire un devis</Link>
@@ -54,7 +54,7 @@ export default function Estuaire() {
             <p className="flex gap-8"><Check size={16} color="var(--green)" /> Livraison <strong>offerte à partir de 65 pièces</strong> commandées.</p>
             <p className="flex gap-8"><Check size={16} color="var(--green)" /> En dessous de 65 pièces : frais de transport de <strong>10 000 FCFA</strong>.</p>
             <p className="flex gap-8"><Check size={16} color="var(--green)" /> Livraison sous <strong>24h</strong>.</p>
-            <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>Les prix et conditions de livraison ne sont valables que pour le chef-lieu de la province de l'Estuaire.</p>
+            <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>Les prix et conditions de livraison ne sont valables que pour Owendo, Akanda et Libreville.</p>
           </div>
         </div>
       </section>

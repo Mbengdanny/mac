@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
-import { Home, Package, FileText, Phone, ShoppingCart, Menu, X, Download } from 'lucide-react'
+import { Home, Package, FileText, Phone, ShoppingCart, Menu, X, Download, MapPin } from 'lucide-react'
 import { useState } from 'react'
 import Logo from './Logo'
 import { useCart } from '../lib/cart'
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/', label: 'Accueil', icon: Home },
   { to: '/catalogue', label: 'Produits', icon: Package },
   { to: '/devis', label: 'Devis', icon: FileText },
+  { to: '/estuaire', label: 'Estuaire', icon: MapPin },
   { to: '/contact', label: 'Service client', icon: Phone },
 ]
 

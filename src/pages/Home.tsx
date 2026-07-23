@@ -19,7 +19,6 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero */}
       <section className="hero">
         <div className="container" style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 820 ? '1.1fr 0.9fr' : '1fr', gap: 40, alignItems: 'center', paddingTop: 56, paddingBottom: 56 }}>
           <div className="fade-up">
@@ -55,10 +54,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Image download feature */}
       <ImageDownloadSection />
 
-      {/* Announcements */}
       {announcements.length > 0 && (
         <section className="container section-tight">
           <div className="card" style={{ borderLeft: '4px solid var(--yellow)' }}>
@@ -75,7 +72,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* Features */}
       <section className="container section">
         <h2 className="h2 text-center">Pourquoi Services VLDMAC ?</h2>
         <p className="lead text-center mt-8" style={{ maxWidth: 640, margin: '8px auto 0' }}>Pensé pour les adultes comme pour les personnes âgées : gros boutons, texte clair, navigation simple.</p>
@@ -86,7 +82,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick actions */}
       <section className="container section-tight">
         <div className="grid grid-2">
           <Link to="/catalogue" className="card-soft quick-action">
@@ -110,7 +105,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Cart nudge */}
       {cart.count > 0 && (
         <div className="container section-tight">
           <div className="card flex between" style={{ background: 'linear-gradient(135deg,#dcfce7,#fef9c3)', border: 'none' }}>
@@ -171,13 +165,7 @@ function ImageDownloadSection() {
         </p>
 
         <div style={{ marginTop: 24, maxWidth: 520, margin: '24px auto 0' }}>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
+          <input ref={inputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
 
           {!selectedUrl ? (
             <div className="upload-zone" onClick={() => inputRef.current?.click()}>
@@ -194,11 +182,7 @@ function ImageDownloadSection() {
                 <button className="btn btn-ghost" onClick={() => inputRef.current?.click()}>
                   <ImagePlus size={18} /> Changer
                 </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleDownload}
-                  disabled={downloading}
-                >
+                <button className="btn btn-primary" onClick={handleDownload} disabled={downloading}>
                   {downloaded ? <><Check size={18} /> Téléchargé !</> : <><Download size={18} /> Télécharger</>}
                 </button>
               </div>

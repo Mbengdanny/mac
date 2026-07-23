@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { FileText, ShoppingCart, Truck, MapPin, ChevronRight, Building2 } from 'lucide-react'
+import { FileText, Truck, MapPin, ChevronRight, Building2 } from 'lucide-react'
 
 export default function Estuaire() {
   return (

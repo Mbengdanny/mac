@@ -24,8 +24,6 @@ function Header() {
     { to: '/admin', label: 'Gestion' },
   ]
 
-  const cartLink = { to: '/panier', label: 'Panier' }
-
   return (
     <header className="app-header">
       <div className="container app-header-inner">
@@ -46,10 +44,10 @@ function Header() {
               {l.label}
             </NavLink>
           ))}
-          <NavLink to={cartLink.to} className="nav-link" style={{ display: 'flex', alignItems: 'center' }}>
+          <NavLink to="/panier" className="nav-link" style={{ display: 'flex', alignItems: 'center' }}>
             <span className="cart-badge">
               <ShoppingCart size={18} />
-              {cartLink.label}
+              Panier
               {cart.count > 0 && <span className="cart-count">{cart.count}</span>}
             </span>
           </NavLink>

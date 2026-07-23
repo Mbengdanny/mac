@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Trash2, Bell, ImagePlus, Plus, Package, FileText, ShoppingCart, Users, Check, X } from 'lucide-react'
+import { Trash2, Bell, ImagePlus, Plus, Package, FileText, ShoppingCart, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { useCategories, useProducts, uploadSiteImage, type Product, type Category } from '../lib/hooks'
+import { useCategories, useProducts, uploadSiteImage, type Product } from '../lib/hooks'
 
 type Tab = 'orders' | 'quotes' | 'products' | 'announcements' | 'images' | 'subscribers'
 
@@ -86,7 +86,7 @@ function OrdersTab() {
           <div className="mt-16" style={{ fontSize: 14 }}>
             {o.items.map((i, idx) => (
               <div key={idx} className="flex between" style={{ padding: '4px 0' }}>
-                <span>{i.name} ×{i.qty}</span>
+                <span>{i.name} x{i.qty}</span>
                 <span>{(i.price * i.qty).toLocaleString('fr-FR')} FCFA</span>
               </div>
             ))}
@@ -149,7 +149,7 @@ function QuotesTab() {
           <div className="mt-16" style={{ fontSize: 14 }}>
             {q.items.map((i, idx) => (
               <div key={idx} className="flex between" style={{ padding: '4px 0' }}>
-                <span>{i.name} ×{i.qty}</span>
+                <span>{i.name} x{i.qty}</span>
                 <span>{(i.price * i.qty).toLocaleString('fr-FR')} FCFA</span>
               </div>
             ))}
@@ -169,7 +169,7 @@ function ProductsTab() {
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  const [unit, setUnit] = useState('pièce')
+  const [unit, setUnit] = useState('piece')
   const [price, setPrice] = useState('')
   const [priceGros, setPriceGros] = useState('')
   const [toast, setToast] = useState<string | null>(null)
@@ -184,7 +184,7 @@ function ProductsTab() {
       price_gros_fcfa: parseInt(priceGros) || 0,
     })
     if (!error) {
-      setToast('Produit ajouté')
+      setToast('Produit ajoute')
       setTimeout(() => setToast(null), 2000)
       setName(''); setPrice(''); setPriceGros('')
       setShowForm(false)
@@ -205,21 +205,21 @@ function ProductsTab() {
       </div>
 
       {showForm && (
-        <div className="card mb-16" style={{ marginBottom: 16 }}>
+        <div className="card" style={{ marginBottom: 16 }}>
           <div className="grid grid-2">
             <div className="form-group">
               <label className="form-label">Nom</label>
               <input className="form-input" value={name} onChange={e => setName(e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">Catégorie</label>
+              <label className="form-label">Categorie</label>
               <select className="form-select" value={categoryId} onChange={e => setCategoryId(e.target.value)}>
                 <option value="">Choisir...</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Unité</label>
+              <label className="form-label">Unite</label>
               <input className="form-input" value={unit} onChange={e => setUnit(e.target.value)} />
             </div>
             <div className="form-group">
@@ -240,7 +240,7 @@ function ProductsTab() {
           <tr><th>Produit</th><th>Catégorie</th><th>Prix</th><th>Gros</th><th></th></tr>
         </thead>
         <tbody>
-          {products.map(p => {
+          {products.map((p: Product) => {
             const cat = categories.find(c => c.id === p.category_id)
             return (
               <tr key={p.id}>
@@ -292,7 +292,7 @@ function AnnouncementsTab() {
 
   return (
     <div>
-      <div className="card mb-16" style={{ marginBottom: 16 }}>
+      <div className="card" style={{ marginBottom: 16 }}>
         <h3 className="h3">Nouvelle annonce</h3>
         <div className="form-group mt-16">
           <label className="form-label">Titre</label>
@@ -340,7 +340,7 @@ function ImagesTab() {
     if (publicUrl) {
       await supabase.from('site_images').insert({ location: 'home', url: publicUrl })
       setUrl(publicUrl)
-      setToast('Image mise à jour')
+      setToast('Image mise a jour')
       setTimeout(() => setToast(null), 2000)
     }
     setUploading(false)

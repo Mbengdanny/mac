@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase'
 export default function Contact() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [message, setMessage] = useState('')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

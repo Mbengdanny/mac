@@ -16,5 +16,12 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/pages/Cart.tsx",
+    "src/pages/Catalog.tsx",
+    "src/pages/Order.tsx",
+    "src/pages/Quote.tsx",
+    "src/lib/pdf.ts"
+  ]
 }

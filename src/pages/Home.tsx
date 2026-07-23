@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { FileText, ShoppingCart, Phone, Users, Eye, Bell, ChevronRight, Truck, ShieldCheck, Clock, ImagePlus } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { FileText, ShoppingCart, Phone, Users, Eye, Bell, ChevronRight, Truck, ShieldCheck, Clock, ImagePlus, Download, Check } from 'lucide-react'
 import { useAnnouncements, useSiteImage, getStat } from '../lib/hooks'
 import { useCart } from '../lib/cart'
 import { supabase } from '../lib/supabase'
@@ -55,13 +55,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Price variation notice — persistent banner */}
-      <div className="price-banner">
-        <div className="container flex gap-12" style={{ alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-          <Bell size={16} />
-          <span>Les prix des produits peuvent varier d'une province à une autre.</span>
-        </div>
-      </div>
+      {/* Image download feature */}
+      <ImageDownloadSection />
 
       {/* Announcements */}
       {announcements.length > 0 && (
@@ -125,6 +120,95 @@ export default function Home() {
         </div>
       )}
     </div>
+  )
+}
+
+function ImageDownloadSection() {
+  const [selectedUrl, setSelectedUrl] = useState<string | null>(null)
+  const [fileName, setFileName] = useState<string>('image')
+  const [downloading, setDownloading] = useState(false)
+  const [downloaded, setDownloaded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('Veuillez choisir un fichier image.')
+      return
+    }
+    setError(null)
+    setDownloaded(false)
+    setFileName(file.name.replace(/\.[^.]+$/, '') || 'image')
+    const url = URL.createObjectURL(file)
+    setSelectedUrl(url)
+  }
+
+  const handleDownload = () => {
+    if (!selectedUrl) return
+    setDownloading(true)
+    const a = document.createElement('a')
+    a.href = selectedUrl
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setDownloading(false)
+    setDownloaded(true)
+    setTimeout(() => setDownloaded(false), 3000)
+  }
+
+  return (
+    <section className="container section-tight">
+      <div className="download-card fade-up">
+        <div className="center" style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(22,163,74,.15)', color: 'var(--green)', margin: '0 auto 16px' }}>
+          <Download size={28} />
+        </div>
+        <h2 className="h2">Télécharger une image</h2>
+        <p className="lead mt-8" style={{ maxWidth: 480, margin: '8px auto 0' }}>
+          Choisissez une image depuis votre appareil, prévisualisez-la, puis téléchargez-la en un clic.
+        </p>
+
+        <div style={{ marginTop: 24, maxWidth: 520, margin: '24px auto 0' }}>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+
+          {!selectedUrl ? (
+            <div className="upload-zone" onClick={() => inputRef.current?.click()}>
+              <ImagePlus size={36} color="var(--green)" style={{ margin: '0 auto 8px' }} />
+              <p style={{ fontWeight: 600, fontSize: 16 }}>Cliquez pour choisir une image</p>
+              <p className="muted" style={{ fontSize: 14, marginTop: 4 }}>JPG, PNG, GIF, WebP — depuis votre appareil</p>
+            </div>
+          ) : (
+            <div className="col gap-12" style={{ alignItems: 'center' }}>
+              <div style={{ width: '100%', borderRadius: 'var(--radius)', overflow: 'hidden', boxShadow: 'var(--shadow-md)', background: '#fff' }}>
+                <img src={selectedUrl} alt="Aperçu" style={{ width: '100%', maxHeight: 320, objectFit: 'contain' }} />
+              </div>
+              <div className="flex gap-12" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button className="btn btn-ghost" onClick={() => inputRef.current?.click()}>
+                  <ImagePlus size={18} /> Changer
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleDownload}
+                  disabled={downloading}
+                >
+                  {downloaded ? <><Check size={18} /> Téléchargé !</> : <><Download size={18} /> Télécharger</>}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {error && <p style={{ color: 'var(--red)', fontSize: 14, marginTop: 12, fontWeight: 600 }}>{error}</p>}
+        </div>
+      </div>
+    </section>
   )
 }
 

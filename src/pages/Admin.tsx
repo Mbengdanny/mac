@@ -1,148 +1,103 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Trash2, Bell, ImagePlus, Plus, Package, FileText, ShoppingCart, Users, Check, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { Package, Bell, Image as ImageIcon, ShoppingCart, FileText, LogOut, Lock, Users, Plus, Trash2, Send, Edit3, X, Check, Upload } from 'lucide-react'
-import { useCatalog } from '../lib/hooks'
-import { fcfa } from '../lib/format'
-import { useToast } from '../lib/toast'
-import type { Order, Quote } from '../lib/types'
+import { useCategories, useProducts, uploadSiteImage, type Product, type Category } from '../lib/hooks'
 
-const ADMIN_EMAIL = 'admin@vldmac.cd'
+type Tab = 'orders' | 'quotes' | 'products' | 'announcements' | 'images' | 'subscribers'
 
 export default function Admin() {
-  const [session, setSession] = useState<boolean | null>(null)
-  const [email, setEmail] = useState('')
-  const [pwd, setPwd] = useState('')
-  const [loginErr, setLoginErr] = useState('')
-  const [tab, setTab] = useState<'products' | 'announcements' | 'images' | 'orders' | 'quotes' | 'subs'>('orders')
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(!!data.session))
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(!!s))
-    return () => sub.subscription.unsubscribe()
-  }, [])
-
-  const login = async () => {
-    setLoginErr('')
-    const { error } = await supabase.auth.signInWithPassword({ email: email || ADMIN_EMAIL, password: pwd })
-    if (error) setLoginErr(error.message)
-  }
-
-  const logout = () => supabase.auth.signOut().then(() => setSession(false))
-
-  if (session === null) return <div className="container section"><div className="card text-center muted">Vérification…</div></div>
-
-  if (!session) {
-    return (
-      <div className="container section">
-        <div className="card" style={{ maxWidth: 400, margin: '0 auto' }}>
-          <div className="center" style={{ width: 56, height: 56, borderRadius: 16, background: '#dbeafe', color: 'var(--blue)', margin: '0 auto 16px' }}><Lock size={26} /></div>
-          <h2 className="h3 text-center">Espace gestionnaire</h2>
-          <p className="muted text-center mt-8" style={{ fontSize: 13.5 }}>Pilotez l'application depuis votre téléphone.</p>
-          <div className="field mt-24">
-            <label className="label">Email</label>
-            <input className="input" value={email} onChange={e => setEmail(e.target.value)} placeholder={ADMIN_EMAIL} />
-          </div>
-          <div className="field">
-            <label className="label">Mot de passe</label>
-            <input className="input" type="password" value={pwd} onChange={e => setPwd(e.target.value)} onKeyDown={e => e.key === 'Enter' && login()} placeholder="••••••••" />
-          </div>
-          {loginErr && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12 }}>{loginErr}</p>}
-          <button className="btn btn-primary btn-block btn-lg" onClick={login}>Se connecter</button>
-          <p className="muted mt-16" style={{ fontSize: 12 }}>Créez votre compte depuis Supabase avec l'email {ADMIN_EMAIL} pour piloter l'application.</p>
-        </div>
-      </div>
-    )
-  }
-
-  const tabs = [
-    { id: 'orders' as const, label: 'Commandes', icon: ShoppingCart },
-    { id: 'quotes' as const, label: 'Devis', icon: FileText },
-    { id: 'products' as const, label: 'Produits', icon: Package },
-    { id: 'announcements' as const, label: 'Annonces', icon: Bell },
-    { id: 'images' as const, label: 'Images', icon: ImageIcon },
-    { id: 'subs' as const, label: 'Abonnés', icon: Users },
-  ]
+  const [tab, setTab] = useState<Tab>('orders')
 
   return (
-    <div className="container section">
-      <div className="between mb-24" style={{ flexWrap: 'wrap', gap: 12 }}>
-        <h1 className="h2">Gestion</h1>
-        <button className="btn btn-ghost btn-sm" onClick={logout}><LogOut size={16} /> Déconnexion</button>
+    <div className="container" style={{ paddingTop: 32, paddingBottom: 48 }}>
+      <h1 className="h1">Espace gestionnaire</h1>
+      <p className="lead mt-8">Gérez vos commandes, devis, produits, annonces et images.</p>
+
+      <div className="admin-tabs mt-24">
+        <button className={`admin-tab ${tab === 'orders' ? 'active' : ''}`} onClick={() => setTab('orders')}><ShoppingCart size={16} style={{ display: 'inline', marginRight: 6 }} /> Commandes</button>
+        <button className={`admin-tab ${tab === 'quotes' ? 'active' : ''}`} onClick={() => setTab('quotes')}><FileText size={16} style={{ display: 'inline', marginRight: 6 }} /> Devis</button>
+        <button className={`admin-tab ${tab === 'products' ? 'active' : ''}`} onClick={() => setTab('products')}><Package size={16} style={{ display: 'inline', marginRight: 6 }} /> Produits</button>
+        <button className={`admin-tab ${tab === 'announcements' ? 'active' : ''}`} onClick={() => setTab('announcements')}><Bell size={16} style={{ display: 'inline', marginRight: 6 }} /> Annonces</button>
+        <button className={`admin-tab ${tab === 'images' ? 'active' : ''}`} onClick={() => setTab('images')}><ImagePlus size={16} style={{ display: 'inline', marginRight: 6 }} /> Images</button>
+        <button className={`admin-tab ${tab === 'subscribers' ? 'active' : ''}`} onClick={() => setTab('subscribers')}><Users size={16} style={{ display: 'inline', marginRight: 6 }} /> Abonnés</button>
       </div>
 
-      <div className="flex gap-8 mb-24" style={{ flexWrap: 'wrap' }}>
-        {tabs.map(t => (
-          <button key={t.id} className={`pill ${tab === t.id ? 'pill-green' : 'pill-muted'}`} style={{ cursor: 'pointer', border: 'none', padding: '10px 16px' }} onClick={() => setTab(t.id)}>
-            <t.icon size={15} style={{ display: 'inline', marginRight: 4 }} /> {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'orders' && <OrdersPanel />}
-      {tab === 'quotes' && <QuotesPanel />}
-      {tab === 'products' && <ProductsPanel />}
-      {tab === 'announcements' && <AnnouncementsPanel />}
-      {tab === 'images' && <ImagesPanel />}
-      {tab === 'subs' && <SubscribersPanel />}
+      {tab === 'orders' && <OrdersTab />}
+      {tab === 'quotes' && <QuotesTab />}
+      {tab === 'products' && <ProductsTab />}
+      {tab === 'announcements' && <AnnouncementsTab />}
+      {tab === 'images' && <ImagesTab />}
+      {tab === 'subscribers' && <SubscribersTab />}
     </div>
   )
 }
 
-/* ---------- Orders ---------- */
-function OrdersPanel() {
+interface Order {
+  id: string
+  order_number: string
+  civility: string
+  client_name: string
+  client_phone: string | null
+  delivery_address: string | null
+  items: { name: string; unit: string; price: number; qty: number }[]
+  total_fcfa: number
+  delivery_fee_fcfa: number
+  payment_method: string
+  status: string
+  created_at: string
+}
+
+function OrdersTab() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
-  const toast = useToast()
 
-  const load = () => {
-    setLoading(true)
+  useEffect(() => {
     supabase.from('orders').select('*').order('created_at', { ascending: false }).then(({ data }) => {
-      setOrders(data || []); setLoading(false)
+      if (data) setOrders(data as Order[])
+      setLoading(false)
     })
-  }
-  useEffect(load, [])
+  }, [])
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from('orders').update({ status }).eq('id', id)
-    toast.show('Statut mis à jour')
-    load()
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o))
   }
 
-  const notifyWhatsApp = (o: Order) => {
-    const msg = encodeURIComponent(`Bonjour ${o.civility} ${o.client_name}, votre commande ${o.order_number} est en cours de traitement. Service client 076452070.`)
-    const phone = (o.client_phone || '').replace(/[^0-9]/g, '')
-    const num = phone.length >= 9 ? '242' + phone.slice(-9) : '242076452070'
-    window.open(`https://wa.me/${num}?text=${msg}`, '_blank')
-  }
-
-  if (loading) return <p className="muted">Chargement…</p>
-  if (orders.length === 0) return <p className="muted">Aucune commande pour l'instant.</p>
+  if (loading) return <p className="muted">Chargement...</p>
+  if (orders.length === 0) return <div className="card"><p className="muted">Aucune commande pour le moment.</p></div>
 
   return (
-    <div className="col gap-12">
+    <div className="col gap-16">
       {orders.map(o => (
-        <div key={o.id} className="card-soft">
-          <div className="between" style={{ flexWrap: 'wrap', gap: 8 }}>
+        <div key={o.id} className="card">
+          <div className="flex between" style={{ flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <strong>{o.order_number}</strong> — {o.civility} {o.client_name}
-              <p className="muted" style={{ fontSize: 13 }}>{o.client_phone} · {o.delivery_address}</p>
+              <strong>{o.order_number}</strong>
+              <div className="muted" style={{ fontSize: 13 }}>{new Date(o.created_at).toLocaleString('fr-FR')}</div>
             </div>
-            <span className={`pill ${o.status === 'pending' ? 'pill-yellow' : 'pill-green'}`}>{o.status}</span>
+            <span className={`badge badge-${o.status}`}>{o.status}</span>
           </div>
-          <div className="col gap-8 mt-16" style={{ fontSize: 13.5 }}>
-            {o.items.map((it, i) => <div key={i} className="between"><span>{it.name} × {it.qty}</span><span>{fcfa(it.price * it.qty)}</span></div>)}
+          <div className="mt-16" style={{ fontSize: 14 }}>
+            <div><strong>{o.civility === 'Mr' ? 'M.' : 'Mme'} {o.client_name}</strong></div>
+            {o.client_phone && <div className="muted">{o.client_phone}</div>}
+            {o.delivery_address && <div className="muted">{o.delivery_address}</div>}
+            <div className="muted mt-8">Paiement : {o.payment_method}</div>
           </div>
-          <div className="between mt-16" style={{ fontSize: 13.5 }}>
-            <span>Livraison : {o.delivery_fee_fcfa === 0 ? 'Offerte' : fcfa(o.delivery_fee_fcfa)}</span>
-            <span>Paiement : {o.payment_method}</span>
+          <div className="mt-16" style={{ fontSize: 14 }}>
+            {o.items.map((i, idx) => (
+              <div key={idx} className="flex between" style={{ padding: '4px 0' }}>
+                <span>{i.name} ×{i.qty}</span>
+                <span>{(i.price * i.qty).toLocaleString('fr-FR')} FCFA</span>
+              </div>
+            ))}
           </div>
-          <div className="between mt-8" style={{ fontWeight: 800, fontSize: 16 }}>
-            <span>Total</span><span style={{ color: 'var(--green)' }}>{fcfa(o.total_fcfa + o.delivery_fee_fcfa)}</span>
-          </div>
-          <div className="flex gap-8 mt-16" style={{ flexWrap: 'wrap' }}>
-            <button className="btn btn-ghost btn-sm" onClick={() => updateStatus(o.id, 'confirmed')}><Check size={15} /> Confirmer</button>
-            <button className="btn btn-ghost btn-sm" onClick={() => updateStatus(o.id, 'delivered')}><Check size={15} /> Livrée</button>
-            <button className="btn btn-sm" style={{ background: '#25D366', color: '#fff' }} onClick={() => notifyWhatsApp(o)}><Send size={15} /> Notifier WhatsApp</button>
+          <div className="flex between mt-16" style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+            <strong>Total : {(o.total_fcfa + o.delivery_fee_fcfa).toLocaleString('fr-FR')} FCFA</strong>
+            <select className="form-select" style={{ width: 'auto' }} value={o.status} onChange={e => updateStatus(o.id, e.target.value)}>
+              <option value="pending">En attente</option>
+              <option value="confirmed">Confirmée</option>
+              <option value="cancelled">Annulée</option>
+            </select>
           </div>
         </div>
       ))}
@@ -150,23 +105,57 @@ function OrdersPanel() {
   )
 }
 
-/* ---------- Quotes ---------- */
-function QuotesPanel() {
+interface Quote {
+  id: string
+  quote_number: string
+  civility: string
+  client_name: string
+  client_phone: string | null
+  items: { name: string; unit: string; price: number; qty: number }[]
+  total_fcfa: number
+  status: string
+  created_at: string
+}
+
+function QuotesTab() {
   const [quotes, setQuotes] = useState<Quote[]>([])
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
-    supabase.from('quotes').select('*').order('created_at', { ascending: false }).then(({ data }) => setQuotes(data || []))
+    supabase.from('quotes').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+      if (data) setQuotes(data as Quote[])
+      setLoading(false)
+    })
   }, [])
-  if (quotes.length === 0) return <p className="muted">Aucun devis pour l'instant.</p>
+
+  if (loading) return <p className="muted">Chargement...</p>
+  if (quotes.length === 0) return <div className="card"><p className="muted">Aucun devis pour le moment.</p></div>
+
   return (
-    <div className="col gap-12">
+    <div className="col gap-16">
       {quotes.map(q => (
-        <div key={q.id} className="card-soft">
-          <div className="between" style={{ flexWrap: 'wrap', gap: 8 }}>
-            <div><strong>{q.quote_number}</strong> — {q.civility} {q.client_name}<p className="muted" style={{ fontSize: 13 }}>{q.client_phone}</p></div>
-            <span className="pill pill-blue">{fcfa(q.total_fcfa)}</span>
+        <div key={q.id} className="card">
+          <div className="flex between" style={{ flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <strong>{q.quote_number}</strong>
+              <div className="muted" style={{ fontSize: 13 }}>{new Date(q.created_at).toLocaleString('fr-FR')}</div>
+            </div>
+            <span className={`badge badge-${q.status}`}>{q.status}</span>
           </div>
-          <div className="col gap-8 mt-16" style={{ fontSize: 13.5 }}>
-            {q.items.map((it, i) => <div key={i} className="between"><span>{it.name} × {it.qty}</span><span>{fcfa(it.price * it.qty)}</span></div>)}
+          <div className="mt-16" style={{ fontSize: 14 }}>
+            <div><strong>{q.civility === 'Mr' ? 'M.' : 'Mme'} {q.client_name}</strong></div>
+            {q.client_phone && <div className="muted">{q.client_phone}</div>}
+          </div>
+          <div className="mt-16" style={{ fontSize: 14 }}>
+            {q.items.map((i, idx) => (
+              <div key={idx} className="flex between" style={{ padding: '4px 0' }}>
+                <span>{i.name} ×{i.qty}</span>
+                <span>{(i.price * i.qty).toLocaleString('fr-FR')} FCFA</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex between mt-16" style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+            <strong>Total : {q.total_fcfa.toLocaleString('fr-FR')} FCFA</strong>
           </div>
         </div>
       ))}
@@ -174,122 +163,156 @@ function QuotesPanel() {
   )
 }
 
-/* ---------- Products ---------- */
-function ProductsPanel() {
-  const { categories, products, loading } = useCatalog()
-  const toast = useToast()
-  const [editing, setEditing] = useState<Record<string, string>>({})
-  const [newName, setNewName] = useState('')
-  const [newPrice, setNewPrice] = useState('')
-  const [newCat, setNewCat] = useState('')
+function ProductsTab() {
+  const categories = useCategories()
+  const products = useProducts()
+  const [showForm, setShowForm] = useState(false)
+  const [name, setName] = useState('')
+  const [categoryId, setCategoryId] = useState('')
+  const [unit, setUnit] = useState('pièce')
+  const [price, setPrice] = useState('')
+  const [priceGros, setPriceGros] = useState('')
+  const [toast, setToast] = useState<string | null>(null)
 
-  const savePrice = async (id: string) => {
-    const detail = editing[id + '_detail']
-    const gros = editing[id + '_gros']
-    const updates: Record<string, number> = {}
-    if (detail && !isNaN(parseInt(detail))) updates.price_fcfa = parseInt(detail)
-    if (gros && !isNaN(parseInt(gros))) updates.price_gros_fcfa = parseInt(gros)
-    if (Object.keys(updates).length === 0) return
-    await supabase.from('products').update(updates).eq('id', id)
-    toast.show('Prix mis à jour')
-    setEditing({})
-    window.location.reload()
+  const handleAdd = async () => {
+    if (!name.trim() || !categoryId || !price) return
+    const { error } = await supabase.from('products').insert({
+      name,
+      category_id: categoryId,
+      unit,
+      price_fcfa: parseInt(price),
+      price_gros_fcfa: parseInt(priceGros) || 0,
+    })
+    if (!error) {
+      setToast('Produit ajouté')
+      setTimeout(() => setToast(null), 2000)
+      setName(''); setPrice(''); setPriceGros('')
+      setShowForm(false)
+      setTimeout(() => window.location.reload(), 500)
+    }
   }
 
-  const addProduct = async () => {
-    if (!newName || !newCat || !newPrice) { toast.show('Remplissez tous les champs'); return }
-    await supabase.from('products').insert({ category_id: newCat, name: newName, price_fcfa: parseInt(newPrice), unit: 'pièce' })
-    setNewName(''); setNewPrice(''); setNewCat('')
-    toast.show('Produit ajouté')
-    window.location.reload()
-  }
-
-  const del = async (id: string) => {
-    if (!confirm('Supprimer ce produit ?')) return
+  const handleDelete = async (id: string) => {
     await supabase.from('products').delete().eq('id', id)
-    toast.show('Produit supprimé')
-    window.location.reload()
+    setTimeout(() => window.location.reload(), 300)
   }
-
-  if (loading) return <p className="muted">Chargement…</p>
 
   return (
-    <div className="col gap-24">
-      <div className="card-soft">
-        <h3 className="flex gap-8 mb-16" style={{ alignItems: 'center' }}><Plus size={18} /> Ajouter un produit</h3>
-        <div className="grid grid-3" style={{ gap: 12 }}>
-          <select className="select" value={newCat} onChange={e => setNewCat(e.target.value)}>
-            <option value="">Catégorie…</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <input className="input" placeholder="Nom du produit" value={newName} onChange={e => setNewName(e.target.value)} />
-          <input className="input" placeholder="Prix FCFA" type="number" value={newPrice} onChange={e => setNewPrice(e.target.value)} />
-        </div>
-        <button className="btn btn-primary btn-sm mt-16" onClick={addProduct}><Plus size={16} /> Ajouter</button>
+    <div>
+      <div className="flex between" style={{ marginBottom: 16 }}>
+        <h3 className="h3">{products.length} produits</h3>
+        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(!showForm)}><Plus size={16} /> Ajouter</button>
       </div>
 
-      <div className="col gap-8">
-        {products.map(p => (
-          <div key={p.id} className="card-soft between" style={{ flexWrap: 'wrap', gap: 10 }}>
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <div style={{ fontWeight: 600, fontSize: 15 }}>{p.name}</div>
-              <div className="muted" style={{ fontSize: 12.5 }}>{categories.find(c => c.id === p.category_id)?.name} · {p.unit}</div>
+      {showForm && (
+        <div className="card mb-16" style={{ marginBottom: 16 }}>
+          <div className="grid grid-2">
+            <div className="form-group">
+              <label className="form-label">Nom</label>
+              <input className="form-input" value={name} onChange={e => setName(e.target.value)} />
             </div>
-            <div className="flex gap-8" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
-              <div className="col" style={{ gap: 2 }}>
-                <span className="muted" style={{ fontSize: 11 }}>Détail</span>
-                <input className="input" style={{ width: 110, textAlign: 'right' }} type="number" defaultValue={p.price_fcfa}
-                  onChange={e => setEditing(s => ({ ...s, [p.id + '_detail']: e.target.value }))} />
-              </div>
-              <div className="col" style={{ gap: 2 }}>
-                <span className="muted" style={{ fontSize: 11 }}>Gros</span>
-                <input className="input" style={{ width: 110, textAlign: 'right' }} type="number" defaultValue={p.price_gros_fcfa}
-                  onChange={e => setEditing(s => ({ ...s, [p.id + '_gros']: e.target.value }))} />
-              </div>
-              <span style={{ fontSize: 13, color: 'var(--muted)' }}>FCFA</span>
-              {(editing[p.id + '_detail'] || editing[p.id + '_gros']) && <button className="btn btn-primary btn-sm" onClick={() => savePrice(p.id)}><Check size={15} /></button>}
-              <button className="qty-btn" style={{ color: '#ef4444', borderColor: '#fecaca' }} onClick={() => del(p.id)}><Trash2 size={15} /></button>
+            <div className="form-group">
+              <label className="form-label">Catégorie</label>
+              <select className="form-select" value={categoryId} onChange={e => setCategoryId(e.target.value)}>
+                <option value="">Choisir...</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Unité</label>
+              <input className="form-input" value={unit} onChange={e => setUnit(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Prix FCFA</label>
+              <input className="form-input" type="number" value={price} onChange={e => setPrice(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Prix de gros FCFA</label>
+              <input className="form-input" type="number" value={priceGros} onChange={e => setPriceGros(e.target.value)} />
             </div>
           </div>
-        ))}
-      </div>
+          <button className="btn btn-primary" onClick={handleAdd}>Enregistrer</button>
+        </div>
+      )}
+
+      <table className="data-table">
+        <thead>
+          <tr><th>Produit</th><th>Catégorie</th><th>Prix</th><th>Gros</th><th></th></tr>
+        </thead>
+        <tbody>
+          {products.map(p => {
+            const cat = categories.find(c => c.id === p.category_id)
+            return (
+              <tr key={p.id}>
+                <td>{p.name}</td>
+                <td className="muted">{cat?.name || '—'}</td>
+                <td>{p.price_fcfa.toLocaleString('fr-FR')}</td>
+                <td>{p.price_gros_fcfa.toLocaleString('fr-FR')}</td>
+                <td><button className="btn btn-ghost btn-sm" onClick={() => handleDelete(p.id)}><Trash2 size={16} /></button></td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+      {toast && <div className="toast">{toast}</div>}
     </div>
   )
 }
 
-/* ---------- Announcements ---------- */
-function AnnouncementsPanel() {
-  const [items, setItems] = useState<{ id: string; title: string; message: string }[]>([])
+interface Announcement {
+  id: string
+  title: string
+  message: string
+}
+
+function AnnouncementsTab() {
+  const [items, setItems] = useState<Announcement[]>([])
   const [title, setTitle] = useState('')
-  const [msg, setMsg] = useState('')
-  const toast = useToast()
+  const [message, setMessage] = useState('')
 
-  const load = () => { supabase.from('announcements').select('*').order('created_at', { ascending: false }).then(({ data }) => setItems(data || [])) }
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    supabase.from('announcements').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+      if (data) setItems(data as Announcement[])
+    })
+  }, [])
 
-  const add = async () => {
-    if (!title || !msg) { toast.show('Remplissez titre et message'); return }
-    await supabase.from('announcements').insert({ title, message: msg })
-    setTitle(''); setMsg(''); toast.show('Annonce publiée'); load()
+  const handleAdd = async () => {
+    if (!title.trim() || !message.trim()) return
+    const { data } = await supabase.from('announcements').insert({ title, message }).select().single()
+    if (data) {
+      setItems(prev => [data as Announcement, ...prev])
+      setTitle(''); setMessage('')
+    }
   }
 
-  const del = async (id: string) => {
-    await supabase.from('announcements').delete().eq('id', id); toast.show('Supprimée'); load()
+  const handleDelete = async (id: string) => {
+    await supabase.from('announcements').delete().eq('id', id)
+    setItems(prev => prev.filter(a => a.id !== id))
   }
 
   return (
-    <div className="col gap-24">
-      <div className="card-soft">
-        <h3 className="flex gap-8 mb-16" style={{ alignItems: 'center' }}><Bell size={18} /> Nouvelle annonce</h3>
-        <div className="field"><input className="input" placeholder="Titre (ex : Nouveau prix du ciment)" value={title} onChange={e => setTitle(e.target.value)} /></div>
-        <div className="field"><textarea className="textarea" placeholder="Message…" value={msg} onChange={e => setMsg(e.target.value)} /></div>
-        <button className="btn btn-primary btn-sm" onClick={add}><Plus size={16} /> Publier</button>
+    <div>
+      <div className="card mb-16" style={{ marginBottom: 16 }}>
+        <h3 className="h3">Nouvelle annonce</h3>
+        <div className="form-group mt-16">
+          <label className="form-label">Titre</label>
+          <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Message</label>
+          <textarea className="form-textarea" value={message} onChange={e => setMessage(e.target.value)} />
+        </div>
+        <button className="btn btn-primary" onClick={handleAdd}><Plus size={18} /> Publier</button>
       </div>
-      <div className="col gap-8">
+
+      <div className="col gap-12">
         {items.map(a => (
-          <div key={a.id} className="card-soft between" style={{ flexWrap: 'wrap', gap: 10 }}>
-            <div><strong style={{ fontSize: 15 }}>{a.title}</strong><p className="muted" style={{ fontSize: 13.5 }}>{a.message}</p></div>
-            <button className="qty-btn" style={{ color: '#ef4444', borderColor: '#fecaca' }} onClick={() => del(a.id)}><Trash2 size={15} /></button>
+          <div key={a.id} className="card flex between" style={{ alignItems: 'flex-start' }}>
+            <div>
+              <strong>{a.title}</strong>
+              <p className="muted mt-8" style={{ fontSize: 14 }}>{a.message}</p>
+            </div>
+            <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(a.id)}><Trash2 size={16} /></button>
           </div>
         ))}
         {items.length === 0 && <p className="muted">Aucune annonce.</p>}
@@ -298,74 +321,84 @@ function AnnouncementsPanel() {
   )
 }
 
-/* ---------- Images ---------- */
-function ImagesPanel() {
-  const toast = useToast()
-  const [homePreview, setHomePreview] = useState<string | null>(null)
-  const [estPreview, setEstPreview] = useState<string | null>(null)
-  const [busy, setBusy] = useState<string | null>(null)
+function ImagesTab() {
+  const [url, setUrl] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
 
-  const uploadFile = async (location: 'home' | 'estuaire', file: File) => {
+  useEffect(() => {
+    supabase.from('site_images').select('url').eq('location', 'home').order('created_at', { ascending: false }).limit(1).maybeSingle().then(({ data }) => {
+      if (data) setUrl((data as { url: string }).url)
+    })
+  }, [])
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 4 * 1024 * 1024) { toast.show('Image trop lourde (max 4 Mo)'); return }
-    setBusy(location)
-    try {
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-      const path = `${location}/${Date.now()}.${ext}`
-      const { error: upErr } = await supabase.storage.from('site-images').upload(path, file, { upsert: true })
-      if (upErr) throw upErr
-      const { data: pub } = supabase.storage.from('site-images').getPublicUrl(path)
-      const url = pub.publicUrl
-      await supabase.from('site_images').insert({ location, url })
-      if (location === 'home') setHomePreview(url)
-      else setEstPreview(url)
-      toast.show('Image enregistrée — visible sur la page')
-    } catch { toast.show('Erreur lors du téléversement') }
-    finally { setBusy(null) }
+    setUploading(true)
+    const publicUrl = await uploadSiteImage('home', file)
+    if (publicUrl) {
+      await supabase.from('site_images').insert({ location: 'home', url: publicUrl })
+      setUrl(publicUrl)
+      setToast('Image mise à jour')
+      setTimeout(() => setToast(null), 2000)
+    }
+    setUploading(false)
   }
 
-  const ImageUploadCard = ({ location, label, preview }: { location: 'home' | 'estuaire'; label: string; preview: string | null }) => (
-    <div className="card-soft">
-      <h3 className="flex gap-8 mb-16" style={{ alignItems: 'center' }}><ImageIcon size={18} /> {label}</h3>
-      {preview && (
-        <div style={{ borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: 12 }}>
-          <img src={preview} alt={label} style={{ width: '100%', maxHeight: 200, objectFit: 'cover' }} />
-        </div>
-      )}
-      <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', display: 'inline-flex' }}>
-        <Upload size={16} /> {busy === location ? 'Téléversement…' : 'Choisir une image'}
-        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(location, f) }} />
-      </label>
-      <p className="muted mt-12" style={{ fontSize: 12.5 }}>Sélectionnez une image depuis votre appareil (JPG, PNG — max 4 Mo).</p>
-    </div>
-  )
-
   return (
-    <div className="col gap-24">
-      <ImageUploadCard location="home" label="Image page d'accueil" preview={homePreview} />
-      <ImageUploadCard location="estuaire" label="Image espace Estuaire" preview={estPreview} />
+    <div className="card">
+      <h3 className="h3">Image de la page d'accueil</h3>
+      <p className="muted mt-8" style={{ fontSize: 14 }}>Téléversez l'image qui apparaît dans la section hero de la page d'accueil.</p>
+      <div className="mt-16">
+        {url ? (
+          <div style={{ borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: 16 }}>
+            <img src={url} alt="Accueil" style={{ width: '100%', maxHeight: 300, objectFit: 'cover' }} />
+          </div>
+        ) : (
+          <div className="hero-img-placeholder" style={{ marginBottom: 16, aspectRatio: '4/3' }}>
+            <ImagePlus size={36} />
+            <p style={{ fontSize: 14 }}>Aucune image</p>
+          </div>
+        )}
+        <label className="btn btn-primary" style={{ cursor: 'pointer' }}>
+          <ImagePlus size={18} /> {uploading ? 'Téléversement...' : 'Téléverser une image'}
+          <input type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} />
+        </label>
+      </div>
+      {toast && <div className="toast">{toast}</div>}
     </div>
   )
 }
 
-/* ---------- Subscribers ---------- */
-function SubscribersPanel() {
-  const [subs, setSubs] = useState<{ id: string; name: string | null; phone: string | null }[]>([])
+function SubscribersTab() {
+  const [subs, setSubs] = useState<{ id: string; name: string | null; phone: string }[]>([])
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
-    supabase.from('subscribers').select('*').order('created_at', { ascending: false }).then(({ data }) => setSubs(data || []))
+    supabase.from('subscribers').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+      if (data) setSubs(data as { id: string; name: string | null; phone: string }[])
+      setLoading(false)
+    })
   }, [])
+
+  if (loading) return <p className="muted">Chargement...</p>
+
   return (
     <div>
-      <p className="muted mb-16">{subs.length} abonné(s)</p>
-      <div className="col gap-8">
-        {subs.map(s => (
-          <div key={s.id} className="card-soft between">
-            <div><strong>{s.name || 'Anonyme'}</strong><p className="muted" style={{ fontSize: 13 }}>{s.phone}</p></div>
-            {s.phone && <a href={`https://wa.me/242${(s.phone || '').replace(/[^0-9]/g, '').slice(-9)}`} target="_blank" rel="noreferrer" className="btn btn-sm" style={{ background: '#25D366', color: '#fff' }}><Send size={15} /> WhatsApp</a>}
-          </div>
-        ))}
-        {subs.length === 0 && <p className="muted">Aucun abonné.</p>}
-      </div>
+      <h3 className="h3" style={{ marginBottom: 16 }}>{subs.length} abonnés</h3>
+      <table className="data-table">
+        <thead><tr><th>Nom</th><th>Téléphone</th></tr></thead>
+        <tbody>
+          {subs.map(s => (
+            <tr key={s.id}>
+              <td>{s.name || '—'}</td>
+              <td>{s.phone}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {subs.length === 0 && <p className="muted mt-16">Aucun abonné.</p>}
     </div>
   )
 }

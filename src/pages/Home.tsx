@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
-import { FileText, ShoppingCart, Phone, Users, Eye, Bell, ChevronRight, Truck, ShieldCheck, Clock, ImagePlus, Download, Check } from 'lucide-react'
+import { FileText, ShoppingCart, Phone, Users, Eye, Bell, ChevronRight, Truck, ShieldCheck, Clock, ImagePlus, Download, Check, AlertCircle } from 'lucide-react'
 import { useAnnouncements, useSiteImage, getStat } from '../lib/hooks'
 import { useCart } from '../lib/cart'
 import { supabase } from '../lib/supabase'
@@ -10,11 +10,14 @@ export default function Home() {
   const heroImg = useSiteImage('home')
   const [visitors, setVisitors] = useState(0)
   const [subs, setSubs] = useState(0)
+  const [priceAlert, setPriceAlert] = useState(false)
   const cart = useCart()
 
   useEffect(() => {
     getStat('visitors').then(setVisitors)
     supabaseCount('subscribers').then(setSubs)
+    supabase.rpc('bump_stat', { stat_key: 'visitors' })
+    setPriceAlert(true)
   }, [])
 
   return (
@@ -37,7 +40,7 @@ export default function Home() {
             <div className="flex gap-24 mt-24" style={{ flexWrap: 'wrap' }}>
               <Stat icon={<Eye size={18} />} value={visitors} label="Visiteurs" color="var(--blue)" />
               <Stat icon={<Users size={18} />} value={subs} label="Abonnés" color="var(--green)" />
-              <Stat icon={<Clock size={18} />} value={null} label="Devis en 2 min" color="var(--yellow-dark)" />
+              <Stat icon={<Clock size={18} />} value={null} label="Livraison 24h" color="var(--yellow-dark)" />
             </div>
           </div>
 
@@ -53,6 +56,14 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {priceAlert && (
+        <div className="container" style={{ marginTop: 20 }}>
+          <div className="price-notice">
+            <AlertCircle size={16} /> Les prix des produits peuvent varier d'une province à une autre.
+          </div>
+        </div>
+      )}
 
       <ImageDownloadSection />
 

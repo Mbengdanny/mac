@@ -18,6 +18,7 @@ export type Product = {
 }
 
 export type QuoteItem = {
+  productId: string
   name: string
   unit: string
   price: number

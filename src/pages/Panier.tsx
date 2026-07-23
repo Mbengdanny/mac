@@ -13,7 +13,7 @@ export default function Panier() {
   const [submitted, setSubmitted] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const deliveryFee = cart.count >= 65 ? 0 : 2000
+  const deliveryFee = cart.count >= 65 ? 0 : 10000
   const grandTotal = cart.total + deliveryFee
 
   const handleSubmit = async () => {

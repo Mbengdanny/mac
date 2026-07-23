@@ -1,25 +1,22 @@
 import { useState } from 'react'
-import { FileText, Plus, Minus, Trash2, Check } from 'lucide-react'
+import { FileText, Plus, Minus, Trash2, Check, Download, MessageCircle } from 'lucide-react'
 import { useProducts, useCategories } from '../lib/hooks'
 import { supabase } from '../lib/supabase'
+import { generateQuotePDF } from '../lib/pdf'
+import { greeting, fcfa } from '../lib/format'
+import type { QuoteItem } from '../lib/types'
 
-interface QuoteItem {
-  productId: string
-  name: string
-  unit: string
-  price: number
-  qty: number
-}
+const PDF_FEE = 50
 
 export default function Devis() {
   const products = useProducts()
   const categories = useCategories()
   const [items, setItems] = useState<QuoteItem[]>([])
   const [selectedProduct, setSelectedProduct] = useState('')
-  const [civility, setCivility] = useState('Mr')
+  const [civility, setCivility] = useState<'Mr' | 'Mme'>('Mr')
   const [clientName, setClientName] = useState('')
   const [clientPhone, setClientPhone] = useState('')
-  const [submitted, setSubmitted] = useState<string | null>(null)
+  const [submitted, setSubmitted] = useState<{ number: string; items: QuoteItem[]; total: number; civility: 'Mr' | 'Mme'; clientName: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const handleAddProduct = () => {
@@ -35,11 +32,9 @@ export default function Devis() {
   }
 
   const updateQty = (id: string, delta: number) => {
-    setItems(prev => prev.map(i => {
-      if (i.productId !== id) return i
-      const newQty = i.qty + delta
-      return newQty <= 0 ? null as unknown as QuoteItem : { ...i, qty: newQty }
-    }).filter(Boolean))
+    setItems(prev => prev
+      .map(i => i.productId !== id ? i : { ...i, qty: i.qty + delta })
+      .filter(i => i.qty > 0))
   }
 
   const removeItem = (id: string) => {
@@ -53,7 +48,7 @@ export default function Devis() {
     if (!clientName.trim()) { setError('Veuillez entrer votre nom.'); return }
     if (items.length === 0) { setError('Veuillez ajouter au moins un produit.'); return }
 
-    const quoteNumber = `DEV-${Date.now().toString().slice(-6)}`
+    const quoteNumber = `DEV-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`
     const { error: err } = await supabase.from('quotes').insert({
       quote_number: quoteNumber,
       civility,
@@ -65,10 +60,42 @@ export default function Devis() {
     })
 
     if (err) { setError('Erreur lors de la création du devis.'); return }
-    setSubmitted(quoteNumber)
+    setSubmitted({ number: quoteNumber, items, total, civility, clientName })
+  }
+
+  const handleDownloadPDF = () => {
+    const doc = generateQuotePDF({
+      quoteNumber: submitted!.number,
+      civility: submitted!.civility,
+      clientName: submitted!.clientName,
+      items: submitted!.items,
+      total: submitted!.total,
+    })
+    doc.save(`devis-${submitted!.number}.pdf`)
+  }
+
+  const buildWhatsAppText = (): string => {
+    if (!submitted) return ''
+    const lines = [
+      `${greeting()} ${submitted.civility} ${submitted.clientName},`,
+      `Voici votre devis pro forma N° ${submitted.number}`,
+      '',
+      ...submitted.items.map(i => `- ${i.name} x${i.qty} = ${fcfa(i.price * i.qty)}`),
+      '',
+      `Total: ${fcfa(submitted.total)}`,
+      '',
+      'Bloque 30 jours.',
+      'Livraison sous 24h.',
+      'Service client 7j/7 au 076452070.',
+      'Version certifiee avec tampon et RCCM, disponible bientot.',
+      'Paiement: Airtel Money (076452070), Moov Money (066819615) ou a la livraison.',
+      "Les prix peuvent varier d'une province a une autre.",
+    ]
+    return encodeURIComponent(lines.join('\n'))
   }
 
   if (submitted) {
+    const waText = buildWhatsAppText()
     return (
       <div className="container" style={{ paddingTop: 48, paddingBottom: 48, maxWidth: 600 }}>
         <div className="card fade-up" style={{ textAlign: 'center' }}>
@@ -76,10 +103,34 @@ export default function Devis() {
             <Check size={32} />
           </div>
           <h1 className="h2">Devis créé !</h1>
-          <p className="lead mt-8">Votre numéro de devis : <strong>{submitted}</strong></p>
-          <p className="muted mt-8">Montant total : {total.toLocaleString('fr-FR')} FCFA</p>
+          <p className="lead mt-8">Votre numéro de devis : <strong>{submitted.number}</strong></p>
+          <p className="muted mt-8">Montant total : {fcfa(submitted.total)}</p>
+
+          <div className="card mt-24" style={{ background: 'var(--bg-soft)', textAlign: 'left', fontSize: 14 }}>
+            <h3 className="h3" style={{ fontSize: 16, marginBottom: 12 }}>Récapitulatif</h3>
+            {submitted.items.map((i, idx) => (
+              <div key={idx} className="flex between" style={{ padding: '4px 0' }}>
+                <span>{i.name} x{i.qty}</span>
+                <span>{fcfa(i.price * i.qty)}</span>
+              </div>
+            ))}
+            <div className="flex between" style={{ borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 8, fontWeight: 800 }}>
+              <span>Total</span><span style={{ color: 'var(--green)' }}>{fcfa(submitted.total)}</span>
+            </div>
+          </div>
+
+          <div className="card mt-16" style={{ background: 'var(--yellow-light)', border: '1px solid var(--yellow)', textAlign: 'left' }}>
+            <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--yellow-dark)' }}>
+              Télécharger le PDF via WhatsApp : {fcfa(PDF_FEE)} de frais
+            </p>
+            <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>
+              Payez {fcfa(PDF_FEE)} via Airtel Money (076452070) ou Moov Money (066819615), puis cliquez sur le bouton WhatsApp ci-dessous pour recevoir votre devis PDF.
+            </p>
+          </div>
+
           <div className="flex gap-12 mt-24" style={{ justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href={`https://wa.me/?text=Devis%20${submitted}%20-%20${total}%20FCFA`} target="_blank" rel="noopener" className="btn btn-primary">Partager sur WhatsApp</a>
+            <button className="btn btn-primary" onClick={handleDownloadPDF}><Download size={18} /> Télécharger le PDF</button>
+            <a href={`https://wa.me/242076452070?text=${waText}`} target="_blank" rel="noopener" className="btn btn-blue"><MessageCircle size={18} /> Envoyer sur WhatsApp</a>
             <button className="btn btn-ghost" onClick={() => { setSubmitted(null); setItems([]); setClientName(''); setClientPhone('') }}>Nouveau devis</button>
           </div>
         </div>
@@ -90,14 +141,16 @@ export default function Devis() {
   return (
     <div className="container" style={{ paddingTop: 32, paddingBottom: 48, maxWidth: 720 }}>
       <h1 className="h1">Demander un devis</h1>
-      <p className="lead mt-8">Ajoutez les produits dont vous avez besoin et recevez un devis pro forma.</p>
+      <p className="lead mt-8" style={{ fontFamily: 'var(--font-arial)' }}>
+        Ajoutez les produits dont vous avez besoin et recevez un devis pro forma. Tout se fait en quelques secondes et en quelques clics.
+      </p>
 
       <div className="card mt-24">
         <h3 className="h3">Vos informations</h3>
         <div className="grid grid-2 mt-16">
           <div className="form-group">
             <label className="form-label">Civilité</label>
-            <select className="form-select" value={civility} onChange={e => setCivility(e.target.value)}>
+            <select className="form-select" value={civility} onChange={e => setCivility(e.target.value as 'Mr' | 'Mme')}>
               <option value="Mr">Monsieur</option>
               <option value="Mme">Madame</option>
             </select>
@@ -121,7 +174,7 @@ export default function Devis() {
             {categories.map(c => (
               <optgroup key={c.id} label={c.name}>
                 {products.filter(p => p.category_id === c.id).map(p => (
-                  <option key={p.id} value={p.id}>{p.name} — {p.price_fcfa.toLocaleString('fr-FR')} FCFA</option>
+                  <option key={p.id} value={p.id}>{p.name} — {fcfa(p.price_fcfa)}</option>
                 ))}
               </optgroup>
             ))}
@@ -135,20 +188,20 @@ export default function Devis() {
               <div key={i.productId} className="flex gap-12" style={{ alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
                 <div style={{ flex: 1 }}>
                   <strong>{i.name}</strong>
-                  <div className="muted" style={{ fontSize: 13 }}>{i.price.toLocaleString('fr-FR')} FCFA / {i.unit}</div>
+                  <div className="muted" style={{ fontSize: 13 }}>{fcfa(i.price)} / {i.unit}</div>
                 </div>
                 <div className="qty-control">
                   <button className="qty-btn" onClick={() => updateQty(i.productId, -1)}><Minus size={16} /></button>
                   <span className="qty-val">{i.qty}</span>
                   <button className="qty-btn" onClick={() => updateQty(i.productId, 1)}><Plus size={16} /></button>
                 </div>
-                <strong style={{ minWidth: 100, textAlign: 'right' }}>{(i.price * i.qty).toLocaleString('fr-FR')} FCFA</strong>
+                <strong style={{ minWidth: 100, textAlign: 'right' }}>{fcfa(i.price * i.qty)}</strong>
                 <button className="btn btn-ghost btn-sm" onClick={() => removeItem(i.productId)}><Trash2 size={16} /></button>
               </div>
             ))}
             <div className="flex between" style={{ paddingTop: 12 }}>
               <span className="h3">Total</span>
-              <span className="h3" style={{ color: 'var(--green)' }}>{total.toLocaleString('fr-FR')} FCFA</span>
+              <span className="h3" style={{ color: 'var(--green)' }}>{fcfa(total)}</span>
             </div>
           </div>
         )}

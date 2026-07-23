@@ -50,7 +50,7 @@ export default function Contact() {
               </div>
               <div>
                 <div style={{ fontWeight: 600 }}>Téléphone</div>
-                <div className="muted" style={{ fontSize: 14 }}>074 XX XX XX</div>
+                <div className="muted" style={{ fontSize: 14 }}>076 45 20 70</div>
               </div>
             </div>
             <div className="flex gap-12" style={{ alignItems: 'center' }}>

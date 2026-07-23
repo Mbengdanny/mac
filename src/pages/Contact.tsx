@@ -16,7 +16,16 @@ export default function Contact() {
     if (!phone.trim()) { toast.show('Saisissez votre numéro'); return }
     setBusy(true)
     try {
-      await supabase.from('subscribers').insert({ name: name || null, phone })
+      const { error } = await supabase.from('subscribers').insert({ name: name || null, phone: phone.trim() })
+      if (error) {
+        if (error.code === '23505') {
+          toast.show('Ce numéro est déjà abonné. Merci !')
+          setName(''); setPhone(''); setMsg('')
+        } else {
+          toast.show('Erreur, réessayez')
+        }
+        return
+      }
       try {
         await fetch(NOTIFY_URL, {
           method: 'POST',

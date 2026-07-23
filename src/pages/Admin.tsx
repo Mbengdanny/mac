@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Package, Bell, Image as ImageIcon, ShoppingCart, FileText, LogOut, Lock, Users, Plus, Trash2, Send, Edit3, X, Check } from 'lucide-react'
+import { Package, Bell, Image as ImageIcon, ShoppingCart, FileText, LogOut, Lock, Users, Plus, Trash2, Send, Edit3, X, Check, Upload } from 'lucide-react'
 import { useCatalog } from '../lib/hooks'
 import { fcfa } from '../lib/format'
 import { useToast } from '../lib/toast'
@@ -301,26 +301,49 @@ function AnnouncementsPanel() {
 /* ---------- Images ---------- */
 function ImagesPanel() {
   const toast = useToast()
-  const [homeUrl, setHomeUrl] = useState('')
-  const [estUrl, setEstUrl] = useState('')
+  const [homePreview, setHomePreview] = useState<string | null>(null)
+  const [estPreview, setEstPreview] = useState<string | null>(null)
+  const [busy, setBusy] = useState<string | null>(null)
 
-  const upload = async (location: 'home' | 'estuaire', url: string) => {
-    if (!url) { toast.show('Collez une URL d\'image'); return }
-    await supabase.from('site_images').insert({ location, url })
-    toast.show('Image enregistrée — visible sur la page')
+  const uploadFile = async (location: 'home' | 'estuaire', file: File) => {
+    if (!file) return
+    if (file.size > 4 * 1024 * 1024) { toast.show('Image trop lourde (max 4 Mo)'); return }
+    setBusy(location)
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+      const path = `${location}/${Date.now()}.${ext}`
+      const { error: upErr } = await supabase.storage.from('site-images').upload(path, file, { upsert: true })
+      if (upErr) throw upErr
+      const { data: pub } = supabase.storage.from('site-images').getPublicUrl(path)
+      const url = pub.publicUrl
+      await supabase.from('site_images').insert({ location, url })
+      if (location === 'home') setHomePreview(url)
+      else setEstPreview(url)
+      toast.show('Image enregistrée — visible sur la page')
+    } catch { toast.show('Erreur lors du téléversement') }
+    finally { setBusy(null) }
   }
+
+  const ImageUploadCard = ({ location, label, preview }: { location: 'home' | 'estuaire'; label: string; preview: string | null }) => (
+    <div className="card-soft">
+      <h3 className="flex gap-8 mb-16" style={{ alignItems: 'center' }}><ImageIcon size={18} /> {label}</h3>
+      {preview && (
+        <div style={{ borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: 12 }}>
+          <img src={preview} alt={label} style={{ width: '100%', maxHeight: 200, objectFit: 'cover' }} />
+        </div>
+      )}
+      <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', display: 'inline-flex' }}>
+        <Upload size={16} /> {busy === location ? 'Téléversement…' : 'Choisir une image'}
+        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(location, f) }} />
+      </label>
+      <p className="muted mt-12" style={{ fontSize: 12.5 }}>Sélectionnez une image depuis votre appareil (JPG, PNG — max 4 Mo).</p>
+    </div>
+  )
 
   return (
     <div className="col gap-24">
-      <div className="card-soft">
-        <h3 className="flex gap-8 mb-16" style={{ alignItems: 'center' }}><ImageIcon size={18} /> Image page d'accueil</h3>
-        <p className="muted mb-16" style={{ fontSize: 13.5 }}>Collez l'URL d'une image (ou téléversez-la sur un service d'hébergement d'images puis collez le lien).</p>
-        <div className="flex gap-8"><input className="input" placeholder="https://…" value={homeUrl} onChange={e => setHomeUrl(e.target.value)} /><button className="btn btn-primary btn-sm" onClick={() => upload('home', homeUrl)}>Enregistrer</button></div>
-      </div>
-      <div className="card-soft">
-        <h3 className="flex gap-8 mb-16" style={{ alignItems: 'center' }}><ImageIcon size={18} /> Image espace Estuaire</h3>
-        <div className="flex gap-8"><input className="input" placeholder="https://…" value={estUrl} onChange={e => setEstUrl(e.target.value)} /><button className="btn btn-primary btn-sm" onClick={() => upload('estuaire', estUrl)}>Enregistrer</button></div>
-      </div>
+      <ImageUploadCard location="home" label="Image page d'accueil" preview={homePreview} />
+      <ImageUploadCard location="estuaire" label="Image espace Estuaire" preview={estPreview} />
     </div>
   )
 }

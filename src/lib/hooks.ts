@@ -41,6 +41,9 @@ export function useSiteImage(location: string) {
 }
 
 export async function bumpVisitor() {
+  const KEY = 'vldmac_visited'
+  if (localStorage.getItem(KEY)) return
+  localStorage.setItem(KEY, '1')
   await supabase.rpc('bump_stat', { stat_key: 'visitors' })
 }
 

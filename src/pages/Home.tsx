@@ -28,7 +28,7 @@ export default function Home() {
               Vos devis et commandes de matériaux en <span style={{ color: 'var(--green)' }}>quelques secondes</span> et en quelques clics.
             </h1>
             <p className="lead mt-16" style={{ fontFamily: 'var(--font-arial)' }}>
-              Services VLDMAC vous accompagne pour chiffrer et commander vos matériaux de construction où que vous soyez — dans l'Estuaire ou à l'étranger. Simple, rapide, fiable.
+              Services VLDMAC vous accompagne pour chiffrer et commander vos matériaux de construction. Simple, rapide, fiable.
             </p>
             <div className="flex gap-12 mt-24" style={{ flexWrap: 'wrap' }}>
               <Link to="/catalogue" className="btn btn-primary btn-lg"><ShoppingCart size={20} /> Commander</Link>
